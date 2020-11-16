@@ -3,8 +3,6 @@ from flask_debugtoolbar import DebugToolbarExtension
 from surveys import satisfaction_survey as survey
 
 
-responses = []
-
 app = Flask(__name__)
 app.config['SECRET_KEY'] = "secret"
 
@@ -22,6 +20,8 @@ def show_survey_start():
 @app.route("/begin", methods=["POST"])
 def start_survey():
 
+    session["responses"] = []
+
     return redirect("/questions/0")
 
 
@@ -29,6 +29,7 @@ def start_survey():
 @app.route("/questions/<int:qid>")
 def show_question(qid):
     """Display current question."""
+    responses = session.get("responses")
     
     if (responses is None):
         return redirect("/")
@@ -51,8 +52,13 @@ def show_question(qid):
 def handle_question():
     """Save response and redirect to next question."""
 
+# get the response choice
     choice = request.form['answer']
+
+    # add this response to the session
+    responses = session["responses"]
     responses.append(choice)
+    session["responses"] = responses
 
     if (len(responses) == len(survey.questions)):
         return redirect("/completion")
